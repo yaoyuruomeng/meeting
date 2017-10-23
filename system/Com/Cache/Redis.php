@@ -16,7 +16,7 @@ class Com_Cache_Redis
      * @var new Redis()
      */
     private $_redis;
-
+    private $_isOpenRedis;
     /**
      * 缺省配置
      *
@@ -46,13 +46,29 @@ class Com_Cache_Redis
         }
 
         $this->_config = $config[$group] + $this->_config;
+        $this->_isOpenRedis = OPEN_REDIS;
+        
     }
-
+    
+    public function _checkRedisStatus(){
+        //var_dump($this->_isOpenRedis);
+        if(!$this->_isOpenRedis){
+            return false;
+        }else{
+            return true;
+        }
+    }
+    
     /**
      * 释放连接
      */
     public function __destruct()
     {
+        //var_dump($this->_redis);
+        //return false;
+        if(!$this->_checkRedisStatus()){
+            return false;
+        }
         if ($this->_redis && is_object($this->_redis)) {
 
             if (method_exists($this->_redis, 'close')) {
@@ -72,6 +88,7 @@ class Com_Cache_Redis
      */
     private function _connect()
     {
+        
         if ($this->_redis === null || ! is_object($this->_redis)) {
 
             $this->_redis = new Redis();
@@ -94,6 +111,9 @@ class Com_Cache_Redis
 
     public function set($key, $value, $ttl = 0)
     {
+        if(!$this->_checkRedisStatus()){
+            return false;
+        }
         $this->_connect();
 
         if ($ttl) {
@@ -105,6 +125,9 @@ class Com_Cache_Redis
 
     public function add($key, $value, $ttl = 0)
     {
+        if(!$this->_checkRedisStatus()){
+            return false;
+        }
         $this->_connect();
 
         if ($result = $this->_redis->setnx($key, $value)) {
@@ -118,6 +141,9 @@ class Com_Cache_Redis
 
     public function replace($key, $value, $ttl = 0)
     {
+        if(!$this->_checkRedisStatus()){
+            return false;
+        }
         $this->_connect();
 
         if (! $this->_redis->exists($key)) {
@@ -129,6 +155,9 @@ class Com_Cache_Redis
 
     public function sRandMember($key, $randNum = 1)
     {
+        if(!$this->_checkRedisStatus()){
+            return false;
+        }
         $this->_connect();
 
         // 上策：phpRedis 原生客户端支持 sRandMember 方法第二个参数 (redis 2.6.2+)
@@ -175,6 +204,9 @@ class Com_Cache_Redis
      */
     public function __call($method, $args)
     {
+        if(!$this->_checkRedisStatus()){
+            return false;
+        }
         $this->_connect();
 
         return call_user_func_array(array($this->_redis, $method), $args);
@@ -191,6 +223,9 @@ class Com_Cache_Redis
      */
     public function autoTrimList($listName, $maxLength, $contentKeyPrefix = null)
     {
+        if(!$this->_checkRedisStatus()){
+            return false;
+        }
         $this->_connect();
 
         // 获取需要删除的 msgIds
