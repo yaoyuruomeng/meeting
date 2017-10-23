@@ -169,7 +169,8 @@ class Com_DB_PDO
                 $db->setAttribute(PDO::ATTR_EMULATE_PREPARES, $this->_emulatePrepare);
             }
 
-            // 设置编码
+            // 设置编码  utf8mb4 可以存表情
+            $db->exec("set names utf8mb4");
             //$db->exec("SET NAMES UTF8");
 
             $db->dsn = $conf;
@@ -187,7 +188,7 @@ class Com_DB_PDO
      * 释放数据库连接（释放写连接、读连接、临时连接）
      */
     public function disconnect()
-    {
+    {  
         $this->_writeDbConn = $this->_readDbConn = $this->_db = null;
     }
 
